@@ -1,0 +1,19 @@
+name = "audio-to-meeting-notes"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain route
+routes = [
+  { pattern = "meeting-notes.agentic-worker.store/*", zone_name = "agentic-worker.store" }
+]
+
+[observability]
+enabled = true
+
+[durable_objects]
+bindings = [{ name = "MCP_OBJECT", class_name = "MyMCP" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MyMCP"]
