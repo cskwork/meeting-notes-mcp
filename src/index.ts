@@ -57,6 +57,28 @@ import torch
 from transformers import pipeline
 import json
 import sys
+import subprocess
+import os
+import tempfile
+
+def convert_to_wav(audio_path):
+    """m4a 등 비wav 포맷을 wav로 변환 (ffmpeg 사용)"""
+    if audio_path.lower().endswith('.wav'):
+        return audio_path, False
+
+    # 임시 wav 파일 생성
+    temp_wav = tempfile.NamedTemporaryFile(suffix='.wav', delete=False).name
+
+    # ffmpeg로 변환 (16kHz mono - Whisper 최적)
+    cmd = [
+        'ffmpeg', '-i', audio_path,
+        '-ar', '16000',  # 16kHz sample rate
+        '-ac', '1',       # mono
+        '-y',             # overwrite
+        temp_wav
+    ]
+    subprocess.run(cmd, capture_output=True, check=True)
+    return temp_wav, True
 
 # Initialize pipeline with Korean Whisper model
 pipe = pipeline(
@@ -67,7 +89,16 @@ pipe = pipeline(
 
 # Transcribe audio file (pass as argument)
 audio_path = sys.argv[1] if len(sys.argv) > 1 else "audio.m4a"
-result = pipe(audio_path, return_timestamps=True)
+
+# Convert to wav if needed (m4a, mp3, etc. -> wav)
+wav_path, needs_cleanup = convert_to_wav(audio_path)
+
+try:
+    result = pipe(wav_path, return_timestamps=True)
+finally:
+    # Cleanup temp file
+    if needs_cleanup and os.path.exists(wav_path):
+        os.remove(wav_path)
 
 # Output JSON with segments
 output = {

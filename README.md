@@ -40,6 +40,9 @@ npm run deploy
 
 ## Claude Desktop Config
 
+claude mcp add --scope user --transport sse meeting-notes https://meeting-notes.agentic-worker.store/sse
+
+
 ```json
 {
   "mcpServers": {
